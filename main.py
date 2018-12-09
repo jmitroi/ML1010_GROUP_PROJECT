@@ -48,7 +48,7 @@ def main():
     df = pd.read_csv("fake_news_normalized_title_and_text.csv")
     df = df[["normalized_text", "label"]]
     df.columns = ["texts", "labels"]
-    df = df.iloc[list(range(0,df.shape[0],10))]
+    #df = df.iloc[list(range(0,df.shape[0],10))]
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
