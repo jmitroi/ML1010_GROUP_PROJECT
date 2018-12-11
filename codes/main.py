@@ -45,10 +45,10 @@ def creat_vector_features(word_vector_file, texts):
 
 def main():
     # read normailzed texts & labels, subsample to run on local machines
-    df = pd.read_csv("fake_news_normalized_title_and_text.csv")
-    df = df[["normalized_text", "label"]]
+    df = pd.read_csv("../data/normalized_text.csv")
+    df = df[["normalized_text", "fake"]]
     df.columns = ["texts", "labels"]
-    #df = df.iloc[list(range(0,df.shape[0],10))]
+    # df = df.iloc[list(range(0,df.shape[0],10))]
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
@@ -61,7 +61,7 @@ def main():
 
     # Convert texts to vector representation
     text_seqences, embedding_matrix, word_index, max_tokens_one_sent = \
-        creat_vector_features('wiki-news-300d-1M.vec', df["texts"])
+        creat_vector_features('../wordvecs/wiki-news-300d-1M.vec', df["texts"])
 
     # train validation split
     train_seq_x, valid_seq_x, train_encoded_y, valid_encoded_y = \

@@ -40,10 +40,9 @@ class CNN():
         pooling_layer = layers.GlobalMaxPool1D()(conv_layer)
         output_layer1 = layers.Dense(50, activation="relu")(pooling_layer)
         output_layer1 = layers.Dropout(0.25)(output_layer1)
-        output_layer2 = layers.Dense(self.num_classes, activation="sigmoid")(output_layer1)
-        final_layer = layers.Activation('softmax', name="softmax")(output_layer2)
+        output_layer2 = layers.Dense(1, activation="sigmoid")(output_layer1)
         # Compile the model
-        model = models.Model(inputs=input_layer, outputs=final_layer)
-        model.compile(optimizer=optimizers.Adam(), loss='categorical_crossentropy', metrics=["accuracy"])
+        model = models.Model(inputs=input_layer, outputs=output_layer2)
+        model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=["accuracy"])
         self.model = model
         return model

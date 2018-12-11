@@ -75,8 +75,9 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True,
     count = 0
     for doc in corpus:
         count += 1
-        if count % 10 == 0:
-            print("{0:d}...".format(len(corpus)-count),end='')
+        print("{0:d}...".format(len(corpus)-count),end='')
+        if count % 100 == 0:
+            print("")
         # strip HTML
         if html_stripping:
             doc = strip_html_tags(doc)
