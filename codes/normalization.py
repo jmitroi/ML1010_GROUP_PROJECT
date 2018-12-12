@@ -112,7 +112,7 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True,
 
 
 # Read in dataset
-all_news = pd.read_csv("../data/all_news.csv")
+all_news = pd.read_csv("../data/real_fake_news.csv")
 trainDF = all_news[["text", "title", "fake"]]
 print("number of nulls in text, title, and label:")
 print(str(trainDF.isnull().sum()))
