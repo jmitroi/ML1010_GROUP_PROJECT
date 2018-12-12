@@ -75,7 +75,8 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True,
     count = 0
     for doc in corpus:
         count += 1
-        print("{0:d}...".format(len(corpus)-count),end='')
+        if count % 10 == 0:
+            print("{0:d}...".format(len(corpus)-count),end='')
         if count % 100 == 0:
             print("")
         # strip HTML
@@ -111,11 +112,15 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True,
 
 
 # Read in dataset
-all_news = pd.read_csv("../data/real_fake_news.csv")
-trainDF = all_news[["text", "fake"]]
+all_news = pd.read_csv("../data/all_news.csv")
+trainDF = all_news[["text", "title", "fake"]]
+print("number of nulls in text, title, and label:")
+print(str(trainDF.isnull().sum()))
 trainDF = trainDF.dropna()
-trainDF.columns = ['text', 'fake']
-print("normalization Start!")
+print("Drop na done. normalization Start!")
+print("Normalizing text.")
 trainDF["normalized_text"] = normalize_corpus(trainDF["text"])
+print("Normalizing title.")
+trainDF["normalized_title"] = normalize_corpus(trainDF["title"])
 trainDF.to_csv("../data/normalized_text.csv", encoding='utf-8', index=False)
 print("normalization done!")
