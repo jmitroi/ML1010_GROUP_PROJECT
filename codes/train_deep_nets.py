@@ -70,10 +70,11 @@ def main():
                       max_tokens_one_sent)
             cnn_model = cnn.create_model()
             history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+            predictions = cnn_model.predict(valid_seq_x)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
-    predictions = cnn_model.predict(valid_seq_x)
+            print("Fail to acquire resources! Retrying.")
     print("CNN accuracy on validation set:")
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
     model_file_names = "../saved_models/cnn.model"
@@ -89,10 +90,11 @@ def main():
                         max_tokens_one_sent)
             lstm_model = lstm.create_model()
             history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+            predictions = lstm_model.predict(valid_seq_x)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
-    predictions = lstm_model.predict(valid_seq_x)
+            print("Fail to acquire resources! Retrying.")
     print("CNN accuracy on validation set:")
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
     model_file_names = "../saved_models/lstm.model"
