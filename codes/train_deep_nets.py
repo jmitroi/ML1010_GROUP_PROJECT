@@ -63,7 +63,7 @@ def main():
 
     # CNN model
     cnn = CNN(len(word_index)+1, embedding_matrix,
-              max_tokens_one_sent, len(encoder.classes_))
+              max_tokens_one_sent)
     cnn_model = cnn.create_model()
     history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
     predictions = cnn_model.predict(valid_seq_x)
@@ -77,7 +77,7 @@ def main():
 
     # LSTM model
     lstm = LSTM(len(word_index) + 1, embedding_matrix,
-              max_tokens_one_sent, len(encoder.classes_))
+              max_tokens_one_sent)
     lstm_model = lstm.create_model()
     history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
     predictions = lstm_model.predict(valid_seq_x)
