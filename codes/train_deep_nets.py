@@ -1,15 +1,9 @@
 # Modeling related
 from sklearn import model_selection, preprocessing, linear_model, naive_bayes, metrics, svm
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn import decomposition, ensemble
-
-import pandas as pd, xgboost, numpy, textblob, string
+import pandas as pd, numpy
 from keras.preprocessing import text, sequence
-from keras import layers, models, optimizers
-from nltk.tokenize.toktok import ToktokTokenizer
-
-from deepnn_models import CNN
-
+import CNN, LSTM from model_zoos
+import pickle
 
 def creat_vector_features(word_vector_file, texts):
     """
@@ -67,14 +61,33 @@ def main():
     train_seq_x, valid_seq_x, train_encoded_y, valid_encoded_y = \
         model_selection.train_test_split(text_seqences, encoded_y, stratify=encoded_y)
 
-    # Create models
+    # CNN model
     cnn = CNN(len(word_index)+1, embedding_matrix,
               max_tokens_one_sent, len(encoder.classes_))
     cnn_model = cnn.create_model()
     history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
     predictions = cnn_model.predict(valid_seq_x)
+    print("CNN accuracy on validation set:")
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
-    pass
+    model_file_names = "../saved_models/cnn.model"
+    print("saving models to " + model_file_names)
+    cnn_model.save(model_file_names)
+    with open('../saved_models/cnn.model.history', 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
+
+    # LSTM model
+    lstm = LSTM(len(word_index) + 1, embedding_matrix,
+              max_tokens_one_sent, len(encoder.classes_))
+    lstm_model = lstm.create_model()
+    history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+    predictions = lstm_model.predict(valid_seq_x)
+    print("CNN accuracy on validation set:")
+    print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
+    model_file_names = "../saved_models/lstm.model"
+    print("saving models to " + model_file_names)
+    lstm_model.save(model_file_names)
+    with open('../saved_models/lstm.model.history', 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
 
 if __name__ == "__main__":
     main()
