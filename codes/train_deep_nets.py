@@ -63,12 +63,12 @@ def main():
         model_selection.train_test_split(text_seqences, encoded_y, stratify=encoded_y)
 
     # CNN model
-    cnn = CNN(len(word_index)+1, embedding_matrix,
-              max_tokens_one_sent)
-    cnn_model = cnn.create_model()
     success = False
     while success == False:
         try:
+            cnn = CNN(len(word_index) + 1, embedding_matrix,
+                      max_tokens_one_sent)
+            cnn_model = cnn.create_model()
             history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
             success = True
         except tf.errors.ResourceExhaustedError as e:
@@ -83,11 +83,11 @@ def main():
         pickle.dump(history.history, file_pi)
 
     # LSTM model
-    lstm = LSTM(len(word_index) + 1, embedding_matrix,
-              max_tokens_one_sent)
-    lstm_model = lstm.create_model()
     while success == False:
         try:
+            lstm = LSTM(len(word_index) + 1, embedding_matrix,
+                        max_tokens_one_sent)
+            lstm_model = lstm.create_model()
             history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
             success = True
         except tf.errors.ResourceExhaustedError as e:
