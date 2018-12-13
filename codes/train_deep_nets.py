@@ -2,7 +2,7 @@
 from sklearn import model_selection, preprocessing, linear_model, naive_bayes, metrics, svm
 import pandas as pd, numpy
 from keras.preprocessing import text, sequence
-import CNN, LSTM from model_zoos
+from model_zoos import CNN, LSTM
 import pickle
 
 def creat_vector_features(word_vector_file, texts):
