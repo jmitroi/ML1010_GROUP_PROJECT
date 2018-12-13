@@ -4,6 +4,7 @@ import pandas as pd, numpy
 from keras.preprocessing import text, sequence
 from model_zoos import CNN, LSTM
 import pickle
+import tensorflow as tf
 
 def creat_vector_features(word_vector_file, texts):
     """
@@ -42,7 +43,7 @@ def main():
     df = pd.read_csv("../data/normalized_texts_labels.csv")
     df = df[["normalized_text", "fake"]]
     df.columns = ["texts", "labels"]
-    #df = df.iloc[list(range(0,df.shape[0],10))]
+    df = df.iloc[list(range(0,df.shape[0],10))]
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
@@ -65,7 +66,13 @@ def main():
     cnn = CNN(len(word_index)+1, embedding_matrix,
               max_tokens_one_sent)
     cnn_model = cnn.create_model()
-    history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+    success = False
+    while success == False:
+        try:
+            history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+            success = True
+        except tf.errors.ResourceExhaustedError as e:
+            success = False
     predictions = cnn_model.predict(valid_seq_x)
     print("CNN accuracy on validation set:")
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
@@ -79,7 +86,12 @@ def main():
     lstm = LSTM(len(word_index) + 1, embedding_matrix,
               max_tokens_one_sent)
     lstm_model = lstm.create_model()
-    history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+    while success == False:
+        try:
+            history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
+            success = True
+        except tf.errors.ResourceExhaustedError as e:
+            success = False
     predictions = lstm_model.predict(valid_seq_x)
     print("CNN accuracy on validation set:")
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
