@@ -45,10 +45,10 @@ def creat_vector_features(word_vector_file, texts):
 
 def main():
     # read normailzed texts & labels, subsample to run on local machines
-    df = pd.read_csv("../data/normalized_text.csv")
+    df = pd.read_csv("../data/normalized_texts_labels.csv")
     df = df[["normalized_text", "fake"]]
     df.columns = ["texts", "labels"]
-    # df = df.iloc[list(range(0,df.shape[0],10))]
+    #df = df.iloc[list(range(0,df.shape[0],10))]
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
@@ -71,7 +71,7 @@ def main():
     cnn = CNN(len(word_index)+1, embedding_matrix,
               max_tokens_one_sent, len(encoder.classes_))
     cnn_model = cnn.create_model()
-    history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=1)
+    history = cnn_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
     predictions = cnn_model.predict(valid_seq_x)
     print(metrics.accuracy_score(predictions.argmax(axis=1), valid_encoded_y.argmax(axis=1)))
     pass
