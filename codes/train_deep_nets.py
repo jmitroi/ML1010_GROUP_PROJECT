@@ -84,6 +84,7 @@ def main():
         pickle.dump(history.history, file_pi)
 
     # LSTM model
+    success = False
     while success == False:
         try:
             lstm = LSTM(len(word_index) + 1, embedding_matrix,
