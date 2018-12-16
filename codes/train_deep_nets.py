@@ -30,7 +30,10 @@ def main():
     df = pd.read_csv("../data/normalized_texts_labels.csv")
     df = df[["normalized_text", "fake"]]
     df.columns = ["texts", "labels"]
-    #df = df.iloc[list(range(0,df.shape[0],10))]
+
+    # downsampling
+    # df = df.iloc[list(range(0,df.shape[0],80))]
+
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
@@ -40,6 +43,7 @@ def main():
                                                                           stratify=df.labels,
                                                                           random_state=42,
                                                                           test_size=0.1, shuffle=True)
+    train_val_texts, train_val_labels = train_texts, train_labels
     train_texts, val_texts, train_labels, val_labels = model_selection.train_test_split(train_texts, train_labels,
                                                                         stratify=train_labels,
                                                                         random_state=42,
@@ -48,10 +52,11 @@ def main():
     # Encode labels
     label_encoder = preprocessing.LabelBinarizer()
     label_encoder.fit(df["labels"])
-    train_labels_encoded, val_labels_encoded, test_labels_encoded = \
+    train_labels_encoded, val_labels_encoded, test_labels_encoded, train_val_labels_encoded = \
         label_encoder.transform(train_labels), \
         label_encoder.transform(val_labels), \
-        label_encoder.transform(test_labels)
+        label_encoder.transform(test_labels), \
+        label_encoder.transform(train_val_labels)
 
     # Convert texts to vector representation
     tokenizer = text.Tokenizer()
@@ -69,10 +74,12 @@ def main():
     # embedding matrix used in first layer of cnn
     embedding_matrix = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec', tokenizer)
     # train validation split
-    train_seq_x, valid_seq_x, test_seq_x = \
+    train_seq_x, valid_seq_x, test_seq_x, train_val_seq_x = \
         generate_word_sequence(train_texts, max_tokens_one_sent, tokenizer), \
         generate_word_sequence(val_texts, max_tokens_one_sent, tokenizer), \
-        generate_word_sequence(test_texts, max_tokens_one_sent, tokenizer)
+        generate_word_sequence(test_texts, max_tokens_one_sent, tokenizer), \
+        generate_word_sequence(train_val_texts, max_tokens_one_sent, tokenizer)
+
 
     # CNN model
     success = False
@@ -103,9 +110,7 @@ def main():
             cnn = CNN(len(tokenizer.word_index) + 1, embedding_matrix,
                       max_tokens_one_sent)
             cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=list(train_seq_x).extend(list(valid_seq_x)),
-                                    y=list(train_labels_encoded).extend(list(val_labels_encoded)),
-                                    epochs=10)
+            history = cnn_model.fit(x=train_val_seq_x,y=train_val_labels_encoded,epochs=10)
             predictions = cnn_model.predict(test_seq_x)
             success = True
         except tf.errors.ResourceExhaustedError as e:
