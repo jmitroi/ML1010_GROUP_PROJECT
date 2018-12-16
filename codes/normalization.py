@@ -110,17 +110,20 @@ def normalize_corpus(corpus, html_stripping=True, contraction_expansion=True,
         normalized_corpus.append(doc)
     return normalized_corpus
 
+def main():
+    # Read in dataset
+    all_news = pd.read_csv("../data/real_fake_news.csv")
+    trainDF = all_news[["text", "title", "fake"]]
+    print("number of nulls in text, title, and label:")
+    print(str(trainDF.isnull().sum()))
+    trainDF = trainDF.dropna()
+    print("Drop na done. normalization Start!")
+    print("Normalizing text.")
+    trainDF["normalized_text"] = normalize_corpus(trainDF["text"])
+    print("Normalizing title.")
+    trainDF["normalized_title"] = normalize_corpus(trainDF["title"])
+    trainDF.to_csv("../data/normalized_text.csv", encoding='utf-8', index=False)
+    print("normalization done!")
 
-# Read in dataset
-all_news = pd.read_csv("../data/real_fake_news.csv")
-trainDF = all_news[["text", "title", "fake"]]
-print("number of nulls in text, title, and label:")
-print(str(trainDF.isnull().sum()))
-trainDF = trainDF.dropna()
-print("Drop na done. normalization Start!")
-print("Normalizing text.")
-trainDF["normalized_text"] = normalize_corpus(trainDF["text"])
-print("Normalizing title.")
-trainDF["normalized_title"] = normalize_corpus(trainDF["title"])
-trainDF.to_csv("../data/normalized_text.csv", encoding='utf-8', index=False)
-print("normalization done!")
+if __name__ == "__main__":
+    main()
