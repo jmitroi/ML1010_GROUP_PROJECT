@@ -41,12 +41,12 @@ def main():
 
     train_texts, test_texts, train_labels, test_labels = model_selection.train_test_split(df.texts, df.labels,
                                                                           stratify=df.labels,
-                                                                          random_state=42,
+                                                                          random_state=12345,
                                                                           test_size=0.1, shuffle=True)
     train_val_texts, train_val_labels = train_texts, train_labels
     train_texts, val_texts, train_labels, val_labels = model_selection.train_test_split(train_texts, train_labels,
                                                                         stratify=train_labels,
-                                                                        random_state=42,
+                                                                        random_state=12345,
                                                                         test_size=0.1, shuffle=True)
 
     # Encode labels
