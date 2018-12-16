@@ -68,8 +68,6 @@ def main():
 
     # embedding matrix used in first layer of cnn
     embedding_matrix = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec', tokenizer)
-
-    generate_word_sequence(df.texts.iloc[:3], max_tokens_one_sent, tokenizer)
     # train validation split
     train_seq_x, valid_seq_x, test_seq_x = \
         generate_word_sequence(train_texts, max_tokens_one_sent, tokenizer), \
@@ -105,7 +103,9 @@ def main():
             cnn = CNN(len(tokenizer.word_index) + 1, embedding_matrix,
                       max_tokens_one_sent)
             cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=train_seq_x+valid_seq_x, y=train_labels_encoded+val_labels_encoded, epochs=10)
+            history = cnn_model.fit(x=list(train_seq_x).extend(list(valid_seq_x)),
+                                    y=list(train_labels_encoded).extend(list(val_labels_encoded)),
+                                    epochs=10)
             predictions = cnn_model.predict(test_seq_x)
             success = True
         except tf.errors.ResourceExhaustedError as e:
