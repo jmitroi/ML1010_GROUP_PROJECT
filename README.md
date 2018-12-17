@@ -2,7 +2,7 @@
 Project name: fake news detection
 
 Relevant files Mid-project proposal reviewer(s):   
-write_up.pdf   
+ML1010 - JSMCJ Group Project Proposal.pdf  
 The write-up for the proposal. It's the primary place we document our steps taken for the task.   
 
 codes/normailization.py     
@@ -32,3 +32,7 @@ python3 codes/normalization.py
 It will normalize the news body and title. But for the proposal, we only use the news body as the input to the classifier.
 3. Run training of deep nets (CNN) as follows:   
 python3 codes/train_deep_nets.py   
+4. To run notebooks/News_DataPrep_EDA.ipynb and generate the dataset "real_fake_news.csv" used in normalization.py, you will also need to download news dataset from these two sources:
+https://www.kaggle.com/snapcrack/all-the-news/home
+https://www.kaggle.com/mrisdal/fake-news
+And put them into "data" folder.
