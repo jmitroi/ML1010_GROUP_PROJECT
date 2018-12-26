@@ -24,8 +24,12 @@ Notes:
 1. Github does not allow files that have size >100MB to be uploaded. Therefor, to repeat the results and run codes/notbooks, you need to uncompress the files stored in these two folders:   
 saved_models/    
 data/     
+
 2. To repeat the results and run code, you also need to download word vectors from this address:   
 https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki-news-300d-1M.vec.zip   
+Also GloVe:    
+kaggle datasets download -d rdizzl3/glove6b50d   
+
 Then uncompress the file and put into the folder of "wordvecs".   
 4. Run text normalization as follows:   
 python3 codes/normalization.py  
