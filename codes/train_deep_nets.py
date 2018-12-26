@@ -52,10 +52,18 @@ def cross_validate(X,y,model,n=5):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model.fit(x=X_train, y=y_train, epochs=10)
+
+        predictions = model.predict(X_train)
+        acc = metrics.accuracy_score(y_true=y_train, y_pred=(predictions > 0.5))
+        auc = metrics.roc_auc_score(y_train, predictions)
+        print("train acc: %.3f" % acc)
+        print("train acc: %.3f" % auc)
+
         predictions = model.predict(X_test)
         acc = metrics.accuracy_score(y_true=y_test, y_pred=(predictions > 0.5))
         auc = metrics.roc_auc_score(y_test,predictions)
-        print("acc: %.3f" % acc)
+        print("val acc: %.3f" % acc)
+        print("val acc: %.3f" % auc)
         scores["acc"] = np.append(scores["acc"],acc)
         scores["auc"] = np.append(scores["auc"],auc)
     print("CV results:")
