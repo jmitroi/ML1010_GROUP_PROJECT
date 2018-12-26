@@ -7,6 +7,8 @@ import pickle
 import tensorflow as tf
 from model_zoos import CnnWrapper, LstmWrapper
 from sklearn.model_selection import StratifiedKFold
+from keras.callbacks import EarlyStopping #, ModelCheckpoint
+train_epochs = 100
 
 def create_embedding_matrix(word_vector_file, tokenizer,
                             max_features,
@@ -51,7 +53,9 @@ def cross_validate(X,y,model,n=5):
         i += 1
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        model.fit(x=X_train, y=y_train, epochs=10)
+        early = EarlyStopping(monitor="val_loss", mode="min", patience=20)
+        callbacks_list = [early]
+        model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
 
         predictions = model.predict(X_train)
         acc = metrics.accuracy_score(y_true=y_train, y_pred=(predictions > 0.5))
@@ -76,7 +80,7 @@ def cross_validate(X,y,model,n=5):
 def main():
     np.random.seed(1234)
     # Parameters for feature extraction
-    max_words = 1000 # max number of words in a document to use
+    max_words = 2000 # max number of words in a document to use
     max_features = None # num rows in embedding vector
 
     # read normailzed texts & labels, subsample to run on local machines
@@ -123,7 +127,7 @@ def main():
     # Encoded sequence that represent a document
     X = generate_word_sequence(df["texts"], max_words, tokenizer)
     embedding_matrix_glove = create_embedding_matrix('../wordvecs/glove.6B.50d.txt',tokenizer, max_features, 50)
-    embedding_matrix_fasttext = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
+    #embedding_matrix_fasttext = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
     # CNN model
 
     success = False
@@ -134,7 +138,9 @@ def main():
             cnn_model = cnn.create_model()
             scores = cross_validate(X, labels_encoded, cnn_model)
             cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=X, y=labels_encoded, epochs=10)
+            early = EarlyStopping(monitor="val_loss", mode="min", patience=20)
+            callbacks_list = [early]
+            history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
@@ -147,6 +153,7 @@ def main():
     with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
 
+    """
     success = False
     print("CNN+FastText")
     while success is False:
@@ -167,6 +174,7 @@ def main():
         pickle.dump(scores, file_pi)
     with open('../saved_models/cnn_fasttext.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
+    """
 
     """
     # LSTM model
