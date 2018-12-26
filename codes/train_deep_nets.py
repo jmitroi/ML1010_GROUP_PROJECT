@@ -54,7 +54,7 @@ def cross_validate(X,y,model_template,n=5):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model = model_template.create_model()
-        early = EarlyStopping(monitor="acc", mode="min", patience=20)
+        early = EarlyStopping(monitor="acc", mode="max", patience=5)
         callbacks_list = [early]
         model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
 
@@ -139,7 +139,7 @@ def main():
             scores = cross_validate(X, labels_encoded, cnn)
             # train on whole set
             cnn_model = cnn.create_model()
-            early = EarlyStopping(monitor="acc", mode="min", patience=20)
+            early = EarlyStopping(monitor="acc", mode="max", patience=5)
             callbacks_list = [early]
             history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
             success = True
@@ -163,7 +163,7 @@ def main():
             scores = cross_validate(X, labels_encoded, cnn)
             # train on whole set
             cnn_model = cnn.create_model()
-            early = EarlyStopping(monitor="acc", mode="min", patience=20)
+            early = EarlyStopping(monitor="acc", mode="max", patience=5)
             callbacks_list = [early]
             history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
             success = True
