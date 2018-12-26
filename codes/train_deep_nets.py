@@ -123,9 +123,9 @@ def main():
     # Encoded sequence that represent a document
     X = generate_word_sequence(df["texts"], max_words, tokenizer)
     embedding_matrix_glove = create_embedding_matrix('../wordvecs/glove.6B.50d.txt',tokenizer, max_features, 50)
-    #embedding_matrix_fastex = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
+    embedding_matrix_fasttext = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
     # CNN model
-    """ 
+
     success = False
     print("CNN+GloVe")
     while success is False:
@@ -146,8 +146,29 @@ def main():
         pickle.dump(scores, file_pi)
     with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
-    """
 
+    success = False
+    print("CNN+FastText")
+    while success is False:
+        try:
+            cnn = CnnWrapper(embedding_matrix_fasttext, max_features, max_words)
+            cnn_model = cnn.create_model()
+            scores = cross_validate(X, labels_encoded, cnn_model)
+            cnn_model = cnn.create_model()
+            history = cnn_model.fit(x=X, y=labels_encoded, epochs=10)
+            success = True
+        except tf.errors.ResourceExhaustedError as e:
+            success = False
+            print("Fail to acquire resources! Retrying.")
+    model_file_names = "../saved_models/cnn_fasttext.model"
+    print("saving models to " + model_file_names)
+    cnn_model.save(model_file_names)
+    with open('../saved_models/cnn_fasttext.model.cv.scores', 'wb') as file_pi:
+        pickle.dump(scores, file_pi)
+    with open('../saved_models/cnn_fasttext.model.history', 'wb') as file_pi:
+        pickle.dump(history, file_pi)
+
+    """
     # LSTM model
     success = False
     while success == False:
@@ -168,7 +189,7 @@ def main():
             pickle.dump(scores, file_pi)
         with open('../saved_models/lstm_glove.model.history', 'wb') as file_pi:
             pickle.dump(history, file_pi)
-
+    """
 
 if __name__ == "__main__":
     main()
