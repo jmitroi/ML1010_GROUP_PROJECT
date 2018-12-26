@@ -44,7 +44,7 @@ def generate_word_sequence(texts, max_words, tokenizer):
     text_seqences = sequence.pad_sequences(text_tokens, maxlen=max_words)
     return text_seqences
 
-def cross_validate(X,y,model,n=5):
+def cross_validate(X,y,model_template,n=5):
     skf = StratifiedKFold(n_splits=n, random_state=42)
     scores = {"acc":np.array([]),"auc":np.array([])}
     i = 1
@@ -53,7 +53,8 @@ def cross_validate(X,y,model,n=5):
         i += 1
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        early = EarlyStopping(monitor="acc", mode="min", patience=5)
+        model = model_template.create_model()
+        early = EarlyStopping(monitor="acc", mode="min", patience=20)
         callbacks_list = [early]
         model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
 
@@ -135,10 +136,10 @@ def main():
     while success is False:
         try:
             cnn = CnnWrapper(embedding_matrix_glove,max_features,max_words)
+            scores = cross_validate(X, labels_encoded, cnn)
+            # train on whole set
             cnn_model = cnn.create_model()
-            scores = cross_validate(X, labels_encoded, cnn_model)
-            cnn_model = cnn.create_model()
-            early = EarlyStopping(monitor="acc", mode="min", patience=5)
+            early = EarlyStopping(monitor="acc", mode="min", patience=20)
             callbacks_list = [early]
             history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
             success = True
@@ -158,11 +159,13 @@ def main():
     print("CNN+FastText")
     while success is False:
         try:
-            cnn = CnnWrapper(embedding_matrix_fasttext, max_features, max_words)
+            cnn = CnnWrapper(embedding_matrix_fasttext,max_features,max_words)
+            scores = cross_validate(X, labels_encoded, cnn)
+            # train on whole set
             cnn_model = cnn.create_model()
-            scores = cross_validate(X, labels_encoded, cnn_model)
-            cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=X, y=labels_encoded, epochs=10)
+            early = EarlyStopping(monitor="acc", mode="min", patience=20)
+            callbacks_list = [early]
+            history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
