@@ -5,27 +5,71 @@ from keras.preprocessing import text, sequence
 from keras.models import load_model
 import pickle
 import tensorflow as tf
-from model_zoos import CNN, LSTM
+from model_zoos import CnnWrapper, LstmWrapper
+from sklearn.model_selection import StratifiedKFold
 
-def create_embedding_matrix(word_vector_file, tokenizer):
+def create_embedding_matrix(word_vector_file, tokenizer,
+                            max_features,
+                            embed_size):
+    """
+        :param max_features: how many unique words to use (i.e num rows in embedding vector).If None, use all
+        :param embed_size: size of embedding vector
+    """
+    if max_features is None:
+        max_features = float('inf')
     embeddings_index = {}
     for i, line in enumerate(open(word_vector_file)):
         values = line.split()
         embeddings_index[values[0]] = np.asarray(values[1:], dtype='float32')
+    print("Total words in embedding file:" + str(len(embeddings_index)))
     word_index = tokenizer.word_index
-    embedding_matrix = np.zeros((len(word_index) + 1, 300))
-    for word, i in word_index.items():
+    nb_words = min(max_features, len(word_index))
+    # for words not in embedding file, init them to a random values
+    all_embs = np.stack(embeddings_index.values())
+    emb_mean, emb_std = all_embs.mean(), all_embs.std()
+    embedding_matrix = np.random.normal(emb_mean, emb_std, (nb_words+1, embed_size))
+    for word, i in sorted(word_index.items(), key=lambda kv: kv[1]):
+        if i >= max_features:
+            continue
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
-def generate_word_sequence(texts,feature_dimension,tokenizer):
+
+def generate_word_sequence(texts, max_words, tokenizer):
     text_tokens = tokenizer.texts_to_sequences(texts)
-    text_seqences = sequence.pad_sequences(text_tokens, maxlen=feature_dimension)
+    text_seqences = sequence.pad_sequences(text_tokens, maxlen=max_words)
     return text_seqences
 
+def cross_validate(X,y,model,n=5):
+    skf = StratifiedKFold(n_splits=n, random_state=42)
+    scores = {"acc":np.array([]),"auc":np.array([])}
+    i = 1
+    for train_index, test_index in skf.split(X, y):
+        print("CV round %d..." % i)
+        i += 1
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        model.fit(x=X_train, y=y_train, epochs=10)
+        predictions = model.predict(X_test)
+        acc = metrics.accuracy_score(y_true=y_test, y_pred=(predictions > 0.5))
+        auc = metrics.roc_auc_score(y_test,predictions)
+        print("acc: %.3f" % acc)
+        scores["acc"] = np.append(scores["acc"],acc)
+        scores["auc"] = np.append(scores["auc"],auc)
+    print("CV results:")
+    for k,v in scores.items():
+        print(k + " mean: %0.4f" % v.mean())
+        print(k + " std: %0.4f"  % v.std())
+    return scores
+
 def main():
+    np.random.seed(1234)
+    # Parameters for feature extraction
+    max_words = 1000 # max number of words in a document to use
+    max_features = None # num rows in embedding vector
+
     # read normailzed texts & labels, subsample to run on local machines
     df = pd.read_csv("../data/normalized_texts_labels.csv")
     df = df[["normalized_text", "fake"]]
@@ -38,115 +82,83 @@ def main():
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
     df = df.dropna()
     print("dataset size:" + str(df.shape))
-
-    train_texts, test_texts, train_labels, test_labels = model_selection.train_test_split(df.texts, df.labels,
-                                                                          stratify=df.labels,
-                                                                          random_state=12345,
-                                                                          test_size=0.1, shuffle=True)
-    train_val_texts, train_val_labels = train_texts, train_labels
-    train_texts, val_texts, train_labels, val_labels = model_selection.train_test_split(train_texts, train_labels,
-                                                                        stratify=train_labels,
-                                                                        random_state=12345,
-                                                                        test_size=0.1, shuffle=True)
-
     # Encode labels
     label_encoder = preprocessing.LabelBinarizer()
     label_encoder.fit(df["labels"])
-    train_labels_encoded, val_labels_encoded, test_labels_encoded, train_val_labels_encoded = \
-        label_encoder.transform(train_labels), \
-        label_encoder.transform(val_labels), \
-        label_encoder.transform(test_labels), \
-        label_encoder.transform(train_val_labels)
+    labels_encoded = \
+        label_encoder.transform(df["labels"])
 
     # Convert texts to vector representation
-    tokenizer = text.Tokenizer()
+    tokenizer = text.Tokenizer(num_words=max_features)
     tokenizer.fit_on_texts(df["texts"])
     # max_tokens_one_sent in wordvec and cnn
     text_tokens = tokenizer.texts_to_sequences(df["texts"])
     max_tokens_one_sent = 0
-    min_tokens_one_sent = 1000000000
+    min_tokens_one_sent = float('inf')
     for doc in text_tokens:
         max_tokens_one_sent = max(max_tokens_one_sent, len(doc))
         min_tokens_one_sent = min(min_tokens_one_sent, len(doc))
     print("Max # of tokens in docs: " + str(max_tokens_one_sent))
     print("Min # of tokens in docs: " + str(min_tokens_one_sent))
 
-    # embedding matrix used in first layer of cnn
-    embedding_matrix = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec', tokenizer)
-    # train validation split
-    train_seq_x, valid_seq_x, test_seq_x, train_val_seq_x = \
-        generate_word_sequence(train_texts, max_tokens_one_sent, tokenizer), \
-        generate_word_sequence(val_texts, max_tokens_one_sent, tokenizer), \
-        generate_word_sequence(test_texts, max_tokens_one_sent, tokenizer), \
-        generate_word_sequence(train_val_texts, max_tokens_one_sent, tokenizer)
+    if max_words is None:
+        max_words = max_tokens_one_sent
+    else:
+        max_words = min(max_tokens_one_sent,max_words)
 
+    if max_features is None:
+        max_features = len(tokenizer.word_index)
+    else:
+        max_features = min(len(tokenizer.word_index),max_features)
 
+    # Encoded sequence that represent a document
+    X = generate_word_sequence(df["texts"], max_words, tokenizer)
+    embedding_matrix_glove = create_embedding_matrix('../wordvecs/glove.6B.50d.txt',tokenizer, max_features, 50)
+    #embedding_matrix_fastex = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
     # CNN model
+    """ 
     success = False
-    print("train on training set.")
-    while success == False:
+    print("CNN+GloVe")
+    while success is False:
         try:
-            cnn = CNN(len(tokenizer.word_index) + 1, embedding_matrix,
-                      max_tokens_one_sent)
+            cnn = CnnWrapper(embedding_matrix_glove,max_features,max_words)
             cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=train_seq_x, y=train_labels_encoded, epochs=10)
-            predictions = cnn_model.predict(valid_seq_x)
+            scores = cross_validate(X, labels_encoded, cnn_model)
+            cnn_model = cnn.create_model()
+            history = cnn_model.fit(x=X, y=labels_encoded, epochs=10)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
             print("Fail to acquire resources! Retrying.")
-    print("CNN accuracy on validation set:")
-    print(metrics.accuracy_score(predictions > 0.5, val_labels_encoded))
-    model_file_names = "../saved_models/cnn_trained_on_trainset.model"
+    model_file_names = "../saved_models/cnn_glove.model"
     print("saving models to " + model_file_names)
     cnn_model.save(model_file_names)
-    with open('../saved_models/cnn.model.history.trained_on_trainset', 'wb') as file_pi:
-        pickle.dump(history.history, file_pi)
-
-    success = False
-    print("train on training set and val set.")
-    while success == False:
-        try:
-            cnn = CNN(len(tokenizer.word_index) + 1, embedding_matrix,
-                      max_tokens_one_sent)
-            cnn_model = cnn.create_model()
-            history = cnn_model.fit(x=train_val_seq_x,y=train_val_labels_encoded,epochs=10)
-            predictions = cnn_model.predict(test_seq_x)
-            success = True
-        except tf.errors.ResourceExhaustedError as e:
-            success = False
-            print("Fail to acquire resources! Retrying.")
-    print("CNN accuracy on test set:")
-    print(metrics.accuracy_score(predictions > 0.5, test_labels_encoded))
-    model_file_names = "../saved_models/cnn_trained_on_trainset_and_valset.model"
-    print("saving models to " + model_file_names)
-    cnn_model.save(model_file_names)
-    with open('../saved_models/cnn.model.history.trained_on_trainset_and_valset', 'wb') as file_pi:
-        pickle.dump(history.history, file_pi)
-
-    # Because LSTM takes too long, we are not training it for mid project submission
+    with open('../saved_models/cnn_glove.model.cv.scores', 'wb') as file_pi:
+        pickle.dump(scores, file_pi)
+    with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
+        pickle.dump(history, file_pi)
     """
+
     # LSTM model
     success = False
     while success == False:
         try:
-            lstm = LSTM(len(word_index) + 1, embedding_matrix,
-                        max_tokens_one_sent)
+            lstm = LstmWrapper(embedding_matrix_glove,max_features,max_words)
             lstm_model = lstm.create_model()
-            history = lstm_model.fit(x=train_seq_x, y=train_encoded_y, epochs=10)
-            predictions = lstm_model.predict(valid_seq_x)
+            scores = cross_validate(X, labels_encoded, lstm_model)
+            lstm_model = lstm.create_model()
+            history = lstm_model.fit(x=X, y=labels_encoded, epochs=10)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
             print("Fail to acquire resources! Retrying.")
-    print("LSTM accuracy on validation set:")
-    print(metrics.accuracy_score(predictions > 0.5, valid_encoded_y))
-    model_file_names = "../saved_models/lstm.model"
-    print("saving models to " + model_file_names)
-    lstm_model.save(model_file_names)
-    with open('../saved_models/lstm.model.history', 'wb') as file_pi:
-        pickle.dump(history.history, file_pi)
-    """
+        model_file_names = "../saved_models/lstm_glove.model"
+        print("saving models to " + model_file_names)
+        lstm_model.save(model_file_names)
+        with open('../saved_models/lstm_glove.model.cv.scores', 'wb') as file_pi:
+            pickle.dump(scores, file_pi)
+        with open('../saved_models/lstm_glove.model.history', 'wb') as file_pi:
+            pickle.dump(history, file_pi)
 
 
 if __name__ == "__main__":

@@ -1,34 +1,28 @@
-# Modeling related
-from sklearn import model_selection, preprocessing, linear_model, naive_bayes, metrics, svm
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn import decomposition, ensemble
-
-import pandas, xgboost, numpy, textblob, string
-from keras.preprocessing import text, sequence
 from keras import layers, models, optimizers
-from nltk.tokenize.toktok import ToktokTokenizer
 
-class CNN():
+
+class CnnWrapper:
     def __init__(self,
-                 num_unique_word_in_corpus, embedding_matrix,
-                 input_vector_len):
+                 embedding_matrix,
+                 max_features,
+                 max_words):
         """
-        :param num_classes: number of classes in labels, used to set the last layers of CNN
-        :param input_vector_len: used to set the dimensions of first layers in CNN
-        :param num_unique_word_in_corpus: the number of unique words seen in the given corpus
         :param embedding_matrix: word index -> word vector mapping
+        :param max_features: how many unique words to use (i.e num rows in embedding vector)
+        :param max_words = 100 # max number of words in a document to use
+
         """
-        self.input_vector_len = input_vector_len
-        self.num_unique_word_in_corpus = num_unique_word_in_corpus
+        self.max_features = max_features
+        self.max_words = max_words
         self.embedding_matrix = embedding_matrix
         self.model = None
 
     def create_model(self):
-        input_layer = layers.Input((self.input_vector_len,))
-        embedding_layer = layers.Embedding(self.num_unique_word_in_corpus, 300,
+        input_layer = layers.Input((self.max_words,))
+        embedding_layer = layers.Embedding(self.max_features+1, len(self.embedding_matrix[0]),
                                            weights=[self.embedding_matrix], trainable=False)(input_layer)
         embedding_layer = layers.SpatialDropout1D(0.3)(embedding_layer)
-        conv_layer = layers.Convolution1D(100, 3, activation="relu")(embedding_layer)
+        conv_layer = layers.Convolution1D(100, 5, activation="relu")(embedding_layer)
         pooling_layer = layers.GlobalMaxPool1D()(conv_layer)
         output_layer1 = layers.Dense(50, activation="relu")(pooling_layer)
         output_layer1 = layers.Dropout(0.25)(output_layer1)
@@ -36,38 +30,39 @@ class CNN():
         # Compile the model
         model = models.Model(inputs=input_layer, outputs=output_layer2)
         model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=["accuracy"])
+        print(model.summary())
         self.model = model
         return self.model
 
-class LSTM():
+
+class LstmWrapper:
     def __init__(self,
-                 num_unique_word_in_corpus, embedding_matrix,
-                 input_vector_len):
+                 embedding_matrix,
+                 max_features,
+                 max_words):
         """
-        :param num_classes: number of classes in labels, used to set the last layers of CNN
-        :param input_vector_len: used to set the dimensions of first layers in CNN
-        :param num_unique_word_in_corpus: the number of unique words seen in the given corpus
         :param embedding_matrix: word index -> word vector mapping
+        :param max_features: how many unique words to use (i.e num rows in embedding vector)
+        :param max_words = 100 # max number of words in a document to use
+
         """
-        self.input_vector_len = input_vector_len
-        self.num_unique_word_in_corpus = num_unique_word_in_corpus
+        self.max_features = max_features
+        self.max_words = max_words
         self.embedding_matrix = embedding_matrix
         self.model = None
 
     def create_model(self):
-        input_layer = layers.Input((self.input_vector_len,))
-        # Add the word embedding Layer
-        embedding_layer = layers.Embedding(self.num_unique_word_in_corpus, 300,
-                                           weights=[self.embedding_matrix], trainable=False)(input_layer)
-        embedding_layer = layers.SpatialDropout1D(0.3)(embedding_layer)
-        # Add the LSTM Layer
-        lstm_layer = layers.LSTM(100)(embedding_layer)
-        # Add the output Layers
-        output_layer1 = layers.Dense(50, activation="relu")(lstm_layer)
-        output_layer1 = layers.Dropout(0.25)(output_layer1)
-        output_layer2 = layers.Dense(1, activation="sigmoid")(output_layer1)
-        # Compile the model
-        model = models.Model(inputs=input_layer, outputs=output_layer2)
-        model.compile(optimizer=optimizers.Adam(), loss='binary_crossentropy', metrics=["accuracy"])
+        inp = layers.Input(shape=(self.max_words,))
+        x = layers.Embedding(self.max_features+1, len(self.embedding_matrix[0]),
+                             weights=[self.embedding_matrix])(inp)
+        x = layers.Bidirectional(layers.LSTM(50, return_sequences=True,
+                                             dropout=0.1, recurrent_dropout=0.1))(x)
+        x = layers.GlobalMaxPool1D()(x)
+        x = layers.Dense(50, activation="relu")(x)
+        x = layers.Dropout(0.1)(x)
+        x = layers.Dense(1, activation="sigmoid")(x)
+        model = models.Model(inputs=inp, outputs=x)
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        print(model.summary())
         self.model = model
         return self.model
