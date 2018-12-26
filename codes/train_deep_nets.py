@@ -62,6 +62,7 @@ def cross_validate(X,y,model,n=5):
     for k,v in scores.items():
         print(k + " mean: %0.4f" % v.mean())
         print(k + " std: %0.4f"  % v.std())
+        print(v)
     return scores
 
 def main():
