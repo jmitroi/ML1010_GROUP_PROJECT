@@ -68,7 +68,7 @@ def cross_validate(X,y,model_template,n=5):
         acc = metrics.accuracy_score(y_true=y_test, y_pred=(predictions > 0.5))
         auc = metrics.roc_auc_score(y_test,predictions)
         print("val acc: %.3f" % acc)
-        print("val acc: %.3f" % auc)
+        print("val auc: %.3f" % auc)
         scores["acc"] = np.append(scores["acc"],acc)
         scores["auc"] = np.append(scores["auc"],auc)
     print("CV results:")
@@ -128,7 +128,7 @@ def main():
     # Encoded sequence that represent a document
     X = generate_word_sequence(df["texts"], max_words, tokenizer)
     embedding_matrix_glove = create_embedding_matrix('../wordvecs/glove.6B.50d.txt',tokenizer, max_features, 50)
-    #embedding_matrix_fasttext = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
+    embedding_matrix_fasttext = create_embedding_matrix('../wordvecs/wiki-news-300d-1M.vec',tokenizer, max_features, 300)
     # CNN model
 
     success = False
@@ -154,7 +154,6 @@ def main():
     with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
 
-    """
     success = False
     print("CNN+FastText")
     while success is False:
@@ -177,7 +176,6 @@ def main():
         pickle.dump(scores, file_pi)
     with open('../saved_models/cnn_fasttext.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
-    """
 
     """
     # LSTM model
