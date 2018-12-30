@@ -76,7 +76,7 @@ def cross_validate(X,y,model_template,n=5):
 def main():
     np.random.seed(1234)
     # Parameters for feature extraction
-    max_words = 2000 # max number of words in a document to use
+    max_words = None # max number of words in a document to use
     max_features = None # num rows in embedding vector
 
     # read normailzed texts & labels, subsample to run on local machines
@@ -85,7 +85,7 @@ def main():
     df.columns = ["texts", "labels"]
 
     # downsampling
-    # df = df.iloc[list(range(0,df.shape[0],80))]
+    df = df.iloc[list(range(0,df.shape[0],80))]
 
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
