@@ -22,6 +22,8 @@ def create_embedding_matrix(word_vector_file, tokenizer,
     embeddings_index = {}
     for i, line in enumerate(open(word_vector_file)):
         values = line.split()
+        if len(values[1:])<=2:
+            continue
         embeddings_index[values[0]] = np.asarray(values[1:], dtype='float32')
     print("Total words in embedding file:" + str(len(embeddings_index)))
     word_index = tokenizer.word_index
