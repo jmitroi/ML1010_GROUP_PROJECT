@@ -90,7 +90,7 @@ def main():
     df.columns = ["texts", "labels"]
 
     # downsampling
-    df = df.iloc[list(range(0,df.shape[0],80))]
+    # df = df.iloc[list(range(0,df.shape[0],80))]
 
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
