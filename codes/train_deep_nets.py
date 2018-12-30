@@ -8,7 +8,7 @@ import tensorflow as tf
 from model_zoos import CnnWrapper, LstmWrapper
 from sklearn.model_selection import StratifiedKFold
 from keras.callbacks import EarlyStopping #, ModelCheckpoint
-train_epochs = 100
+train_epochs = 200
 
 def create_embedding_matrix(word_vector_file, tokenizer,
                             max_features,
