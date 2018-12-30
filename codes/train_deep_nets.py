@@ -74,6 +74,11 @@ def cross_validate(X,y,model_template,n=5):
     return df_scores
 
 def main():
+    # https://stackoverflow.com/questions/44855603/typeerror-cant-pickle-thread-lock-objects-in-seq2seq
+    setattr(tf.contrib.rnn.GRUCell, '__deepcopy__', lambda self, _: self)
+    setattr(tf.contrib.rnn.BasicLSTMCell, '__deepcopy__', lambda self, _: self)
+    setattr(tf.contrib.rnn.MultiRNNCell, '__deepcopy__', lambda self, _: self)
+
     np.random.seed(1234)
     # Parameters for feature extraction
     max_words = None # max number of words in a document to use
