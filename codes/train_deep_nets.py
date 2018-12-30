@@ -49,7 +49,7 @@ def generate_word_sequence(texts, max_words, tokenizer):
 def cross_validate(X,y,model_template,n=5):
     skf = StratifiedKFold(n_splits=n, random_state=42)
     scores = {"train_acc": [], "val_acc": [], "train_auc": [], "val_auc": []}
-    i = 1
+    i = 0
     for train_index, test_index in skf.split(X, y):
         print("CV round %d..." % i)
         i += 1
@@ -59,7 +59,6 @@ def cross_validate(X,y,model_template,n=5):
         early = EarlyStopping(monitor="acc", mode="max", patience=5)
         callbacks_list = [early]
         model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
-
         train_pred_prob = model.predict(X_train)
         scores["train_acc"].append(metrics.accuracy_score(y_true=y_train, y_pred=(train_pred_prob > 0.5)))
         scores["train_auc"].append(metrics.roc_auc_score(y_train, train_pred_prob))
