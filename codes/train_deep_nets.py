@@ -46,7 +46,7 @@ def generate_word_sequence(texts, max_words, tokenizer):
 
 def cross_validate(X,y,model_template,n=5):
     skf = StratifiedKFold(n_splits=n, random_state=42)
-    scores = {"acc":np.array([]),"auc":np.array([])}
+    scores = {"train_acc": [], "val_acc": [], "train_auc": [], "val_auc": []}
     i = 1
     for train_index, test_index in skf.split(X, y):
         print("CV round %d..." % i)
@@ -58,25 +58,20 @@ def cross_validate(X,y,model_template,n=5):
         callbacks_list = [early]
         model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
 
-        predictions = model.predict(X_train)
-        acc = metrics.accuracy_score(y_true=y_train, y_pred=(predictions > 0.5))
-        auc = metrics.roc_auc_score(y_train, predictions)
+        train_pred_prob = model.predict(X_train)
+        scores["train_acc"].append(metrics.accuracy_score(y_true=y_train, y_pred=(train_pred_prob > 0.5)))
+        scores["train_auc"].append(metrics.roc_auc_score(y_train, train_pred_prob))
         print("train acc: %.3f" % acc)
         print("train acc: %.3f" % auc)
-
-        predictions = model.predict(X_test)
-        acc = metrics.accuracy_score(y_true=y_test, y_pred=(predictions > 0.5))
-        auc = metrics.roc_auc_score(y_test,predictions)
-        print("val acc: %.3f" % acc)
-        print("val auc: %.3f" % auc)
-        scores["acc"] = np.append(scores["acc"],acc)
-        scores["auc"] = np.append(scores["auc"],auc)
-    print("CV results:")
-    for k,v in scores.items():
-        print(k + " mean: %0.4f" % v.mean())
-        print(k + " std: %0.4f"  % v.std())
-        print(v)
-    return scores
+        val_pred_prob = model.predict(X_test)
+        scores["val_acc"].append(metrics.accuracy_score(y_true=y_test, y_pred=(val_pred_prob > 0.5)))
+        scores["val_auc"].append(metrics.roc_auc_score(y_test, val_pred_prob))
+    df_scores = pd.DataFrame(scores)
+    df_scores.index.name = "CV round"
+    df_scores = df_scores.T
+    df_scores["mean"] = df_scores.mean(axis=1)
+    df_scores["std"] = df_scores.std(axis=1)
+    return df_scores
 
 def main():
     np.random.seed(1234)
@@ -136,7 +131,8 @@ def main():
     while success is False:
         try:
             cnn = CnnWrapper(embedding_matrix_glove,max_features,max_words)
-            scores = cross_validate(X, labels_encoded, cnn)
+            df_scores = cross_validate(X, labels_encoded, cnn)
+            print(df_scores)
             # train on whole set
             cnn_model = cnn.create_model()
             early = EarlyStopping(monitor="acc", mode="max", patience=5)
@@ -150,7 +146,7 @@ def main():
     print("saving models to " + model_file_names)
     cnn_model.save(model_file_names)
     with open('../saved_models/cnn_glove.model.cv.scores', 'wb') as file_pi:
-        pickle.dump(scores, file_pi)
+        pickle.dump(df_scores, file_pi)
     with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
 
@@ -159,7 +155,7 @@ def main():
     while success is False:
         try:
             cnn = CnnWrapper(embedding_matrix_fasttext,max_features,max_words)
-            scores = cross_validate(X, labels_encoded, cnn)
+            df_scores = cross_validate(X, labels_encoded, cnn)
             # train on whole set
             cnn_model = cnn.create_model()
             early = EarlyStopping(monitor="acc", mode="max", patience=5)
@@ -173,7 +169,7 @@ def main():
     print("saving models to " + model_file_names)
     cnn_model.save(model_file_names)
     with open('../saved_models/cnn_fasttext.model.cv.scores', 'wb') as file_pi:
-        pickle.dump(scores, file_pi)
+        pickle.dump(df_scores, file_pi)
     with open('../saved_models/cnn_fasttext.model.history', 'wb') as file_pi:
         pickle.dump(history, file_pi)
 
