@@ -63,8 +63,6 @@ def cross_validate(X,y,model_template,n=5):
         train_pred_prob = model.predict(X_train)
         scores["train_acc"].append(metrics.accuracy_score(y_true=y_train, y_pred=(train_pred_prob > 0.5)))
         scores["train_auc"].append(metrics.roc_auc_score(y_train, train_pred_prob))
-        print("train acc: %.3f" % acc)
-        print("train acc: %.3f" % auc)
         val_pred_prob = model.predict(X_test)
         scores["val_acc"].append(metrics.accuracy_score(y_true=y_test, y_pred=(val_pred_prob > 0.5)))
         scores["val_auc"].append(metrics.roc_auc_score(y_test, val_pred_prob))
