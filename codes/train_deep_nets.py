@@ -153,7 +153,7 @@ def main():
     with open('../saved_models/cnn_glove.model.cv.scores', 'wb') as file_pi:
         pickle.dump(df_scores, file_pi)
     with open('../saved_models/cnn_glove.model.history', 'wb') as file_pi:
-        pickle.dump(history, file_pi)
+        pickle.dump(history.history, file_pi)
 
     success = False
     print("CNN+FastText")
@@ -176,7 +176,7 @@ def main():
     with open('../saved_models/cnn_fasttext.model.cv.scores', 'wb') as file_pi:
         pickle.dump(df_scores, file_pi)
     with open('../saved_models/cnn_fasttext.model.history', 'wb') as file_pi:
-        pickle.dump(history, file_pi)
+        pickle.dump(history.history, file_pi)
 
     """
     # LSTM model
