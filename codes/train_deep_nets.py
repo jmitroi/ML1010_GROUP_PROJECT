@@ -65,6 +65,7 @@ def cross_validate(X,y,model_template,n=5):
         val_pred_prob = model.predict(X_test)
         scores["val_acc"].append(metrics.accuracy_score(y_true=y_test, y_pred=(val_pred_prob > 0.5)))
         scores["val_auc"].append(metrics.roc_auc_score(y_test, val_pred_prob))
+        print(scores)
     df_scores = pd.DataFrame(scores)
     df_scores.index.name = "CV round"
     df_scores = df_scores.T
