@@ -56,9 +56,10 @@ def cross_validate(X,y,model_template,n=5):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         model = model_template.create_model()
-        early = EarlyStopping(monitor="acc", mode="max", patience=5)
+        early = EarlyStopping(monitor="val_acc", mode="max", patience=5)
         callbacks_list = [early]
-        model.fit(x=X_train, y=y_train, epochs=train_epochs, callbacks=callbacks_list)
+        model.fit(x=X_train, y=y_train, validation_data=(X_test,y_test),
+                  epochs=train_epochs, callbacks=callbacks_list)
         train_pred_prob = model.predict(X_train)
         scores["train_acc"].append(metrics.accuracy_score(y_true=y_train, y_pred=(train_pred_prob > 0.5)))
         scores["train_auc"].append(metrics.roc_auc_score(y_train, train_pred_prob))
@@ -85,7 +86,7 @@ def main():
     df.columns = ["texts", "labels"]
 
     # downsampling
-    # df = df.iloc[list(range(0,df.shape[0],80))]
+    df = df.iloc[list(range(0,df.shape[0],80))]
 
     print("# of NaN of text:" + str(df["texts"].isnull().sum()))
     print("# of NaN of label:" + str(df["labels"].isnull().sum()))
@@ -163,7 +164,8 @@ def main():
             cnn_model = cnn.create_model()
             early = EarlyStopping(monitor="acc", mode="max", patience=5)
             callbacks_list = [early]
-            history = cnn_model.fit(x=X, y=labels_encoded, epochs=train_epochs, callbacks=callbacks_list)
+            history = cnn_model.fit(x=X, y=labels_encoded,
+                                    epochs=train_epochs, callbacks=callbacks_list)
             success = True
         except tf.errors.ResourceExhaustedError as e:
             success = False
