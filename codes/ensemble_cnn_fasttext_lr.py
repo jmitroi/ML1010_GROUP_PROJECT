@@ -142,12 +142,12 @@ def main():
                           epochs=train_epochs, callbacks=callbacks_list)
 
                 train_pred_prob = model.predict(X_train_embedded)
-                train_pred_prob += lr_clf.predict_proba(X_train_tfidf_nb)
+                train_pred_prob += lr_clf.predict_proba(X_train_tfidf_nb)[:,1]
                 train_pred_prob = train_pred_prob/2
                 scores["train_acc"].append(metrics.accuracy_score(y_true=y_train, y_pred=(train_pred_prob > 0.5)))
                 scores["train_auc"].append(metrics.roc_auc_score(y_train, train_pred_prob))
                 val_pred_prob = model.predict(X_test_embedded)
-                val_pred_prob += lr_clf.predict_proba(X_test_embedded)
+                val_pred_prob += lr_clf.predict_proba(X_test_embedded)[:,1]
                 val_pred_prob /= 2
                 scores["val_acc"].append(metrics.accuracy_score(y_true=y_test, y_pred=(val_pred_prob > 0.5)))
                 scores["val_auc"].append(metrics.roc_auc_score(y_test, val_pred_prob))
