@@ -1,10 +1,17 @@
-import pandas as pd
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.linear_model import LogisticRegression
+from ClassifierWrapper import *
+from Vectorizer import *
+from sklearn import metrics
 from TextClassifier import TextClassifier
+import pandas as pd
 import warnings
+import numpy as np
 warnings.filterwarnings('ignore')
+
+# Macro control
+fold_num = 5 # kfold
+downsamlping = False
+
+# Read data
 np.random.seed(0)
 df = pd.read_csv("../data/normalized_texts_labels.csv",encoding="utf-8")
 df = df[["normalized_title","normalized_text","fake"]]
@@ -13,40 +20,104 @@ print("# of NaN of texts:" + str(df["texts"].isnull().sum()))
 print("# of NaN of labels:" + str(df["labels"].isnull().sum()))
 print("# of NaN of titles:" + str(df["titles"].isnull().sum()))
 df = df.dropna()
+
 # downsampling
-df = df.iloc[list(range(0,df.shape[0],80))]
+if downsamlping is True:
+    df = df.iloc[list(range(0,df.shape[0],100))]
 print("dataset size:" + str(df.shape))
 y = df["labels"].values
 X = df["texts"].values
 
-from ClassifierWrapper import *
-from Vectorizer import *
+model_name = "cntvec_lr"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerCountVec()
+clf = LogisticRegressionWrapper(C=4, dual=True)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
 
+model_name = "cntvecnb_lr"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerCountVecNB()
+clf = LogisticRegressionWrapper(C=4, dual=True)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
 """
-vec = VectorizerTFIDF(max_features=None, ngram_range=(1, 2))
-clf = LogisticRegressionTemplate(C=4, dual=True)
-tc = TextClassifier(vectorizer=vec, classifierTemplate=clf)
-scores = tc.cross_validate(X,y,3)
+how to load saved models
+tc2 = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+tc2.load_models("../saved_models/cntvecnb_lr")
+pred = tc2.predict(X)
+print(metrics.f1_score(y, pred>0.5))
 """
 
-"""
-vec = VectorizerFasttext()
-clf = CNNTemplate(docLen=5000)
-tc = TextClassifier(vectorizer=vec, classifierTemplate=clf)
-scores = tc.cross_validate(X,y,3,useEarlyStop=True,useEmbedding=True)
-"""
+model_name = "tfidf_lr"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerTFIDF()
+clf = LogisticRegressionWrapper(C=4, dual=True)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
 
-#vec = VectorizerCountVecNB()
-#clf = LogisticRegressionWrapper(C=4, dual=True)
-#tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
-#scores = tc.cross_validate(X,y,3)
+model_name = "tfidfnb_lr"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerTFIDFNB()
+clf = LogisticRegressionWrapper(C=4, dual=True)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
 
-# , VectorizerFasttext(docLen=5000)
-# , CNNWrapper(docLen=5000)
-vec = VectorizerFasttext(docLen=5000)
-clf = CNNWrapper(docLen=5000)
-tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(), VectorizerFasttext(docLen=5000)],
-                    classifierList=[LogisticRegressionWrapper(C=4, dual=True), CNNWrapper(docLen=5000)])
-scores = tc.cross_validate(X,y,3)
+model_name = "cntvec_mnb"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerCountVec()
+clf = MultinomialNBWrapper()
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
 
-print(scores)
+model_name = "tfidfnb_rf"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerTFIDFNB()
+clf = RandomForestClassifierWrapper(n_estimators=50,
+                                    max_features=0.8,
+                                    random_state=42,n_jobs=-1)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
+
+model_name = "tfidfnb_svmlinear"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerTFIDFNB()
+clf = SVCWrapper(kernel='linear',probability=True)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
+
+model_name = "tfidfnb_lrbagging"
+saved_folder = "../saved_models/" + model_name
+vec = VectorizerTFIDFNB()
+clf = BaggingClassifierWrapper(base_estimator=LogisticRegression(),
+                               n_estimators=50,
+                               bootstrap=True,
+                               bootstrap_features=True,
+                               verbose=1,
+                               n_jobs=-1)
+tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)
+
+model_name = "ensembled_tfidfnb_lr_cntvec_mnb"
+saved_folder = "../saved_models/" + model_name
+tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(), VectorizerCountVec()],
+                    classifierList=[LogisticRegressionWrapper(C=4, dual=True), MultinomialNBWrapper()])
+scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
+tc.fit(X,y)
+tc.save_models(saved_folder)

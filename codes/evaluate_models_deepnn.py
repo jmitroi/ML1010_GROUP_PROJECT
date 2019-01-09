@@ -55,7 +55,8 @@ print(metrics.f1_score(y, pred>0.5))
 
 model_name = "fasttext_cnn"
 saved_folder = "../saved_models/" + model_name
-vec = VectorizerEmbedding(docLen=5000,word_vector_file="../wordvecs/glove.6B.50d.txt")
+vec = VectorizerEmbedding(docLen=5000,
+                          word_vector_file="../wordvecs/wiki-news-300d-1M.vec")
 clf = CNNWrapper(docLen=5000)
 tc = TextClassifier(vectorizerList=[vec], classifierList=[clf])
 scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
@@ -68,8 +69,11 @@ print(metrics.f1_score(y_test, pred_test>0.5))
 
 model_name = "ensemble_fasttext_cnn_tfidfnb_lr"
 saved_folder = "../saved_models/" + model_name
-tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(), VectorizerCountVec()],
-                    classifierList=[LogisticRegressionWrapper(C=4, dual=True), LogisticRegressionWrapper(C=4, dual=True)])
+tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(),
+                                    VectorizerEmbedding(docLen=5000,
+                                                        word_vector_file="../wordvecs/wiki-news-300d-1M.vec")],
+                    classifierList=[LogisticRegressionWrapper(C=4, dual=True),
+                                    CNNWrapper(docLen=5000)])
 scores = tc.cross_validate(X,y,fold_num,saved_folder=saved_folder)
 print("Fitting classifier(s) on the whole dataset.")
 tc.fit(X,y)

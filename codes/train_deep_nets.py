@@ -40,7 +40,6 @@ def create_embedding_matrix(word_vector_file, tokenizer,
             embedding_matrix[i] = embedding_vector
     return embedding_matrix
 
-
 def generate_word_sequence(texts, max_words, tokenizer):
     text_tokens = tokenizer.texts_to_sequences(texts)
     text_seqences = sequence.pad_sequences(text_tokens, maxlen=max_words)
