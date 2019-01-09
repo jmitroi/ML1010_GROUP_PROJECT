@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 
 # Macro control
 fold_num = 5 # kfold
-downsamlping = False
+downsamlping = True
 
 # Read data
 np.random.seed(0)
@@ -31,7 +31,7 @@ X = df["texts"].values
 
 # hold out one set as final test set
 X, X_test, y, y_test = train_test_split(X, y, stratify=y, random_state=12345, test_size=0.2, shuffle=True)
-
+"""
 model_name = "glove_cnn"
 saved_folder = "../saved_models/" + model_name
 vec = VectorizerEmbedding(docLen=5000,word_vector_file="../wordvecs/glove.6B.50d.txt")
@@ -44,15 +44,9 @@ tc.save_models(saved_folder)
 pred_test = tc.predict(X_test)
 print(model_name + "accuracy on testset")
 print(metrics.f1_score(y_test, pred_test>0.5))
-
-"""
-how to load saved models
-tc2 = TextClassifier(vectorizerList=[vec], classifierList=[clf])
-tc2.load_models(saved_folder)
-pred = tc2.predict(X)
-print(metrics.f1_score(y, pred>0.5))
 """
 
+"""
 model_name = "fasttext_cnn"
 saved_folder = "../saved_models/" + model_name
 vec = VectorizerEmbedding(docLen=5000,
@@ -66,7 +60,7 @@ tc.save_models(saved_folder)
 pred_test = tc.predict(X_test)
 print(model_name + "accuracy on testset")
 print(metrics.f1_score(y_test, pred_test>0.5))
-
+"""
 model_name = "ensemble_fasttext_cnn_tfidfnb_lr"
 saved_folder = "../saved_models/" + model_name
 tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(),
