@@ -3,6 +3,9 @@ from sklearn import metrics,preprocessing
 import pandas as pd
 import re
 import numpy as np
+import os
+import glob
+import pickle
 
 
 class TextClassifier:
@@ -14,14 +17,40 @@ class TextClassifier:
         assert type(vectorizerList) is list
         assert len(classifierList) == len(vectorizerList)
 
-    def vectorize(self, X):
-        pass
-
     def fit(self, X, y):
-        pass
+        label_encoder = preprocessing.LabelBinarizer()
+        y = label_encoder.fit_transform(y)
+        X = self.additional_preprocess(X)
+        numClfs = len(self.classifierList)
+        for k in range(numClfs):
+            # Train vectorizerList
+            self.vectorizerList[k] = self.vectorizerList[k].clone()
+            self.vectorizerList[k].fit(X, y)
+            if self.classifierList[k].useEmbedding is True:
+                self.classifierList[k].numUniqueWord = len(self.vectorizerList[k].tokenizer.word_index)
+                self.classifierList[k].embdeddingMatrix = self.vectorizerList[k].embeddingMatrix
+            X_transformed = self.vectorizerList[k].transform(X)
+
+            # Train classifier
+            self.classifierList[k] = self.classifierList[k].clone()
+            epoch_num = None
+            if len(self.classifierList[k].history) > 0:
+                max_epoch_nums = [len(h.epoch) for h in self.classifierList[k].history]
+                epoch_num = int(np.mean(max_epoch_nums))
+            if self.classifierList[k].isKerasClf is True and epoch_num is None:
+                epoch_num = 10
+            self.classifierList[k].fit(X=X_transformed, y=y, epochs=epoch_num)
 
     def predict(self, X):
-        pass
+        X = self.additional_preprocess(X)
+        pred_prob = np.zeros((len(X),))
+        numClfs = len(self.classifierList)
+        for k in range(numClfs):
+            # Evaluate classifier
+            X_transformed = self.vectorizerList[k].transform(X)
+            pred_prob += self.classifierList[k].predict_proba(X=X_transformed).squeeze()
+        pred_prob /= numClfs
+        return pred_prob
 
     def remove_overfitwords(text):
         overfit_list = ["donald trump", "hillary clinton", \
@@ -41,7 +70,7 @@ class TextClassifier:
             texts.append(doc)
         return np.array(texts)
 
-    def cross_validate(self, X, y, k):
+    def cross_validate(self, X, y, k, saved_folder=None):
         # X is raw texts, y is labels before encoding, k is number of folds in CV
         # useEarlyStop is used in CNN training
         label_encoder = preprocessing.LabelBinarizer()
@@ -74,9 +103,11 @@ class TextClassifier:
                 # Train classifier
                 self.classifierList[k] = self.classifierList[k].clone()
                 if self.classifierList[k].useValEarlyStop is True:
-                    self.classifierList[k].fit(X=X_train_transformed, y=y_train, validation_data=(X_val_transformed,y_val))
+                    history = self.classifierList[k].fit(X=X_train_transformed, y=y_train, validation_data=(X_val_transformed,y_val))
                 else:
-                    self.classifierList[k].fit(X=X_train_transformed, y=y_train)
+                    history = self.classifierList[k].fit(X=X_train_transformed, y=y_train)
+                if history is not None:
+                    self.classifierList[k].history.append(history)
 
             val_pred_prob = np.zeros((len(y_val),))
             train_pred_prob = np.zeros((len(y_train),))
@@ -107,11 +138,50 @@ class TextClassifier:
                         scores[f + "_" + s].append(metrics.precision_score(y_true, y_eval))
                     if s == "recall":
                         scores[f + "_" + s].append(metrics.recall_score(y_true, y_eval))
-
         # Summmary
         df_scores = pd.DataFrame(scores)
         df_scores.index.name = "CV round"
         df_scores = df_scores.T
         df_scores["mean"] = df_scores.mean(axis=1)
         df_scores["std"] = df_scores.std(axis=1)
+        if os.path.isdir(saved_folder) is False:
+            os.mkdir(saved_folder)
+        with open(saved_folder+"/cv_score.pickle", 'wb') as handle:
+            pickle.dump(df_scores, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(saved_folder+"/cv_score.txt", 'w') as handle:
+            handle.write(saved_folder+"\n")
+            handle.write(str(df_scores))
+            handle.write("\n")
         return df_scores
+
+    def save_models(self, folder_path):
+        if os.path.isdir(folder_path) is True:
+            files = glob.glob(folder_path+"/*")
+            for f in files:
+                file_name = f.split(sep="/")[-1]
+                if "model" in file_name or "vec" in file_name:
+                    os.remove(f)
+            pass
+        else:
+            os.mkdir(folder_path)
+        numClfs = len(self.classifierList)
+        print("saving models and vectorizer to " + folder_path)
+        for k in range(numClfs):
+            self.classifierList[k].save(folder_path+"/"+str(k)+".model")
+            self.vectorizerList[k].save(folder_path+"/"+str(k)+".vec")
+
+    def load_models(self, folder_path):
+        print("loading models and vectorizer from " + folder_path)
+        if os.path.isdir(folder_path) is True:
+            files = sorted(glob.glob(folder_path+"/*"))
+            for f in files:
+                file_name = f.split(sep="/")[-1]
+                if "model" in file_name:
+                    index = int(file_name.split(sep=".")[0])
+                    self.classifierList[index].load(f)
+                if "vec" in file_name:
+                    index = int(file_name.split(sep=".")[0])
+                    self.vectorizerList[index].load(f)
+        else:
+            print(folder_path + " is empty!")
+            raise ValueError

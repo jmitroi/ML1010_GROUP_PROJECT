@@ -1,9 +1,25 @@
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from keras.preprocessing import text, sequence
 import numpy as np
+import pickle
 
-class VectorizerTFIDF:
+class VectorizerBase:
+    def __init__(self):
+        self.vec = None
+
+    def save(self, file_path):
+        print("saving vectorizer to " + file_path)
+        with open(file_path, 'wb') as handle:
+            pickle.dump(self.vec, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_path):
+        print("loading vectorizer from " + file_path)
+        with open(file_path, 'rb') as handle:
+            self.vec = pickle.load(handle)
+
+class VectorizerTFIDF(VectorizerBase):
     def __init__(self, max_features=None, ngram_range=(1, 2)):
+        super().__init__()
         self.max_features = max_features
         self.ngram_range = ngram_range
         self.vec = TfidfVectorizer(min_df=3, max_features=self.max_features, \
@@ -24,8 +40,7 @@ class VectorizerTFIDF:
     def transform(self,X):
         return self.vec.transform(X)
 
-
-class VectorizerCountVec:
+class VectorizerCountVec(VectorizerBase):
     def __init__(self, max_features=None, ngram_range=(1, 2)):
         self.max_features = max_features
         self.ngram_range = ngram_range
@@ -45,7 +60,7 @@ class VectorizerCountVec:
     def transform(self,X):
         return self.vec.transform(X)
 
-class VectorizerCountVecNB:
+class VectorizerCountVecNB(VectorizerBase):
     def __init__(self, max_features=None, ngram_range=(1, 2)):
         self.max_features = max_features
         self.ngram_range = ngram_range
@@ -72,7 +87,20 @@ class VectorizerCountVecNB:
     def transform(self,X):
         return self.vec.transform(X).multiply(self.r)
 
-class VectorizerTFIDFNB:
+    def save(self, file_path):
+        print("saving vectorizer to " + file_path)
+        to_save = {"vec":self.vec, "r":self.r}
+        with open(file_path, 'wb') as handle:
+            pickle.dump(to_save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_path):
+        print("loading vectorizer from " + file_path)
+        with open(file_path, 'rb') as handle:
+            from_save = pickle.load(handle)
+            self.vec = from_save["vec"]
+            self.r = from_save["r"]
+
+class VectorizerTFIDFNB(VectorizerBase):
     def __init__(self, max_features=None, ngram_range=(1, 2)):
         self.max_features = max_features
         self.ngram_range = ngram_range
@@ -101,7 +129,20 @@ class VectorizerTFIDFNB:
     def transform(self,X):
         return self.vec.transform(X).multiply(self.r)
 
-class VectorizerFasttext:
+    def save(self, file_path):
+        print("saving vectorizer to " + file_path)
+        to_save = {"vec":self.vec, "r":self.r}
+        with open(file_path, 'wb') as handle:
+            pickle.dump(to_save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_path):
+        print("loading vectorizer from " + file_path)
+        with open(file_path, 'rb') as handle:
+            from_save = pickle.load(handle)
+            self.vec = from_save["vec"]
+            self.r = from_save["r"]
+
+class VectorizerEmbedding:
     def __init__(self, word_vector_file='../wordvecs/wiki-news-300d-1M.vec',
                  docLen=5000):
         """
@@ -161,4 +202,19 @@ class VectorizerFasttext:
         else:
             raise ValueError
 
+    def save(self, file_path):
+        to_save = {"tokenizer": self.tokenizer,
+                   "docLen": self.docLen,
+                   "embeddingMatrix": self.embeddingMatrix}
+        print("saving vectorizer to " + file_path)
+        with open(file_path, 'wb') as handle:
+            pickle.dump(to_save, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_path):
+        print("loading vectorizer from " + file_path)
+        with open(file_path, 'rb') as handle:
+            from_saved = pickle.load(handle)
+        self.tokenizer = from_saved["tokenizer"]
+        self.docLen = from_saved["docLen"]
+        self.embeddingMatrix = from_saved["embeddingMatrix"]
 

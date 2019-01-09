@@ -2,11 +2,15 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.base import clone
 from keras import layers, models, optimizers
 from keras.callbacks import EarlyStopping
+import pickle
+from keras.models import load_model
 
 class ClassifierWrapperBase():
     def __init__(self):
         self.useEmbedding = False
         self.useValEarlyStop = False
+        self.isKerasClf = False
+        self.history = []
 
 class LogisticRegressionWrapper(ClassifierWrapperBase):
     def __init__(self,
@@ -22,8 +26,9 @@ class LogisticRegressionWrapper(ClassifierWrapperBase):
                                         max_iter=max_iter, multi_class=multi_class, verbose=verbose, warm_start=warm_start,
                                         n_jobs=n_jobs)
 
-    def fit(self, X, y, validation_data=None):
+    def fit(self, X, y, validation_data=None, epochs=None):
         self.model.fit(X,y)
+        return None
 
     def predict_proba(self, X):
         return self.model.predict_proba(X)[:,1]
@@ -31,6 +36,16 @@ class LogisticRegressionWrapper(ClassifierWrapperBase):
     def clone(self):
         self.model = clone(self.model)
         return self
+
+    def save(self, file_path):
+        print("saving model to " + file_path)
+        with open(file_path, 'wb') as handle:
+            pickle.dump(self.model, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_path):
+        print("loading model from " + file_path)
+        with open(file_path, 'rb') as handle:
+            self.model = pickle.load(handle)
 
 
 class CNNWrapper(ClassifierWrapperBase):
@@ -45,9 +60,11 @@ class CNNWrapper(ClassifierWrapperBase):
         self.train_epochs = 200
         self.useEmbedding = True
         self.useValEarlyStop = True
+        self.isKerasClf = True
         self.model = None
+        self.history = [] #history is not reset when cloned
 
-    def fit(self, X, y, validation_data=None):
+    def fit(self, X, y, validation_data=None, epochs=None):
         # validation_data=(X_test,y_test)
         if validation_data is not None:
             early = EarlyStopping(monitor="acc", mode="max", patience=5)
@@ -56,7 +73,9 @@ class CNNWrapper(ClassifierWrapperBase):
                                      validation_data=validation_data,
                                      callbacks=callbacks_list)
         else:
-            history = self.model.fit(x=X, y=y, epochs=int(self.train_epochs/10))
+            if epochs is None:
+                epochs = 10
+            history = self.model.fit(x=X, y=y, epochs=epochs)
         return history
 
     def predict_proba(self, X):
@@ -78,3 +97,10 @@ class CNNWrapper(ClassifierWrapperBase):
         self.model = model
         return self
 
+    def save(self, file_path):
+        print("saving models to " + file_path)
+        self.model.save(file_path)
+
+    def load(self, file_path):
+        print("loading model from " + file_path)
+        self.model = load_model(file_path)
