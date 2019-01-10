@@ -5,7 +5,8 @@ from TextClassifier import TextClassifier
 import pandas as pd
 import warnings
 import numpy as np
-warnings.filterwarnings('ignore')
+from sklearn.model_selection import train_test_split
+# warnings.filterwarnings('ignore')
 
 # Macro control
 fold_num = 5 # kfold
@@ -27,6 +28,9 @@ if downsamlping is True:
 print("dataset size:" + str(df.shape))
 y = df["labels"].values
 X = df["texts"].values
+
+# hold out one set as final test set
+X, X_test, y, y_test = train_test_split(X, y, stratify=y, random_state=12345, test_size=0.2, shuffle=True)
 
 model_name = "cntvec_lr"
 saved_folder = "../saved_models/" + model_name
