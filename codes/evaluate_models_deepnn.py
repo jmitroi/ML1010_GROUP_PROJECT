@@ -61,9 +61,9 @@ pred_test = tc.predict(X_test)
 print(model_name + "accuracy on testset")
 print(metrics.f1_score(y_test, pred_test>0.5))
 """
-model_name = "ensemble_fasttext_cnn_tfidfnb_lr"
+model_name = "ensemble_fasttext_cnn_cntvecnb_lr"
 saved_folder = "../saved_models/" + model_name
-tc = TextClassifier(vectorizerList=[VectorizerTFIDFNB(),
+tc = TextClassifier(vectorizerList=[VectorizerCountVecNB(),
                                     VectorizerEmbedding(docLen=5000,
                                                         word_vector_file="../wordvecs/wiki-news-300d-1M.vec")],
                     classifierList=[LogisticRegressionWrapper(C=4, dual=True),
