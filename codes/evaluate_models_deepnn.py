@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 
 # Macro control
 fold_num = 5 # kfold
-downsamlping = True
+downsamlping = False
 
 # Read data
 np.random.seed(0)
