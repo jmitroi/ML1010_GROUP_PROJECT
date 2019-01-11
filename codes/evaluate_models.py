@@ -9,8 +9,8 @@ from sklearn.model_selection import train_test_split
 warnings.filterwarnings('ignore')
 
 # Macro control
-fold_num = 3 # kfold
-downsamlping = True
+fold_num = 5 # kfold
+downsamlping = False
 
 # Read data
 np.random.seed(0)
