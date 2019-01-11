@@ -89,22 +89,22 @@ model_set = {
     "svmlinear_tfidf": {
         "vec": [VectorizerTFIDF()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": True
+        "run": False
     },
     "svmlinear_tfidfnb": {
         "vec": [VectorizerTFIDFNB()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": True
+        "run": False
     },
     "svmlinear_cntvec": {
         "vec": [VectorizerCountVec()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": True
+        "run": False
     },
     "svmlinear_cntvecnb": {
         "vec": [VectorizerCountVecNB()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": True
+        "run": False
     },
     "lrbagging_tfidf": {
         "vec": [VectorizerTFIDF()],
