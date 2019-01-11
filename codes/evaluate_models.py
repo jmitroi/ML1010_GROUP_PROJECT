@@ -10,7 +10,7 @@ warnings.filterwarnings('ignore')
 
 # Macro control
 fold_num = 5 # kfold
-downsamlping = False
+downsamlping = True
 
 # Read data
 np.random.seed(0)
@@ -36,55 +36,55 @@ model_set = {
     "lr_cntvec": {
         "vec": [VectorizerCountVec()],
         "clf": [LogisticRegressionWrapper(C=4, dual=True)],
-        "run": True
+        "run": False
     },
     "lr_cntvecnb": {
         "vec": [VectorizerCountVecNB()],
         "clf": [LogisticRegressionWrapper(C=4, dual=True)],
-        "run": True
+        "run": False
     },
     "lr_tfidf": {
         "vec": [VectorizerTFIDF()],
         "clf": [LogisticRegressionWrapper(C=4, dual=True)],
-        "run": True
+        "run": False
     },
     "lr_tfidfnb": {
         "vec": [VectorizerTFIDFNB()],
         "clf": [LogisticRegressionWrapper(C=4, dual=True)],
-        "run": True
+        "run": False
     },
     "mnb_cntvec": {
         "vec": [VectorizerCountVec()],
         "clf": [MultinomialNBWrapper()],
-        "run": True
+        "run": False
     },
     "rf_cntvec": {
         "vec": [VectorizerCountVec()],
         "clf": [RandomForestClassifierWrapper(n_estimators=50,
                                               max_features=0.8,
                                               random_state=42,n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "rf_cntvecnb": {
         "vec": [VectorizerCountVecNB()],
         "clf": [RandomForestClassifierWrapper(n_estimators=50,
                                               max_features=0.8,
                                               random_state=42,n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "rf_tfidf": {
         "vec": [VectorizerTFIDF()],
         "clf": [RandomForestClassifierWrapper(n_estimators=50,
                                               max_features=0.8,
                                               random_state=42,n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "rf_tfidfnb": {
         "vec": [VectorizerTFIDFNB()],
         "clf": [RandomForestClassifierWrapper(n_estimators=50,
                                               max_features=0.8,
                                               random_state=42,n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "svmlinear_tfidf": {
         "vec": [VectorizerTFIDF()],
