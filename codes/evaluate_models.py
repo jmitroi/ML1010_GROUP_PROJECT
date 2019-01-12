@@ -99,12 +99,12 @@ model_set = {
     "svmlinear_cntvec": {
         "vec": [VectorizerCountVec()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": False
+        "run": True
     },
     "svmlinear_cntvecnb": {
         "vec": [VectorizerCountVecNB()],
         "clf": [SVCWrapper(kernel='linear',probability=True)],
-        "run": False
+        "run": True
     },
     "lrbagging_tfidf": {
         "vec": [VectorizerTFIDF()],
@@ -114,7 +114,7 @@ model_set = {
                                          bootstrap_features=True,
                                          verbose=1,
                                          n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "lrbagging_tfidfnb": {
         "vec": [VectorizerTFIDFNB()],
@@ -124,7 +124,7 @@ model_set = {
                                          bootstrap_features=True,
                                          verbose=1,
                                          n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "lrbagging_cntvec": {
         "vec": [VectorizerCountVec()],
@@ -134,7 +134,7 @@ model_set = {
                                          bootstrap_features=True,
                                          verbose=1,
                                          n_jobs=-1)],
-        "run": True
+        "run": False
     },
     "lrbagging_cntvecnb": {
         "vec": [VectorizerCountVecNB()],
@@ -144,7 +144,7 @@ model_set = {
                                          bootstrap_features=True,
                                          verbose=1,
                                          n_jobs=-1)],
-        "run": True
+        "run": False
     }
 }
 
