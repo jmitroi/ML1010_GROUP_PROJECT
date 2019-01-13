@@ -118,4 +118,14 @@ dmypy.json
 .idea/
 
 # Word vec, too big
-wordvecs/
+wordvecs/*
+
+# saved models
+saved_models/*/*.model
+saved_models/*/*.vec
+
+*/*__MACOSX*
+
+data/all-the-news
+data/*.csv
+notebooks/*
