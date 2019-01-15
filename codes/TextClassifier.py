@@ -144,6 +144,8 @@ class TextClassifier:
         df_scores = df_scores.T
         df_scores["mean"] = df_scores.mean(axis=1)
         df_scores["std"] = df_scores.std(axis=1)
+        if saved_folder is None:
+            return df_scores
         if os.path.isdir(saved_folder) is False:
             os.mkdir(saved_folder)
         with open(saved_folder+"/cv_score.pickle", 'wb') as handle:
