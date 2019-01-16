@@ -45,7 +45,9 @@ This folder stores the pretrained word vectors downloaded from the web and used 
 fastText:   
 https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki-news-300d-1M.vec.zip   
 GloVe:    
-kaggle datasets download -d rdizzl3/glove6b50d
+kaggle datasets download -d rdizzl3/glove6b50d   
+If reviwer want to run train models using the codes from codes/, you will need to create this folder and download these pretrained vectors to you computer yourself. They are too big for github.
+
 
 5. data/   
 
