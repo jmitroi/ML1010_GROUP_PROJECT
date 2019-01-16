@@ -1,42 +1,52 @@
 # ML1010_GROUP_PROJECT
 Project name: fake news detection
 
-Relevant files Mid-project proposal reviewer(s):   
-ML1010 - JSMCJ Group Project Proposal.pdf  
-The write-up for the proposal. It's the primary place we document our steps taken for the task.   
+Here are a list of descriptions for each folder in this reposition.   
+1. write_up/   
 
-codes/normailization.py     
-Codes to normalize the news body and news title.   
+Project proposal write-up and final write-up, as well as powerpoint slides used for in-class presentations.
 
-codes/train_deep_nets.py   
-Codes to train CNN.   
+2. codes/   
 
-notebooks/News_DataPrep_EDA.ipynb   
-Codes that are used to generate dataset for fake news and real news.   
+ClassifierWrapper.py   
+Wrapper for all classifiers used in the project.     
 
-notebooks/model_evaluations.ipynb   
-Codes for feature extractions/engineering, model tranining, and model evaluation.   
+Vectorizer.py   
+Wrapper for all vectorizer used in the project.
 
-notebooks/Feature_Selection.ipynb   
-Codes for feature selections. We have spent some effort into this; but note that we have not integrated it into the machine learning pipeline yet.
+TextClassifier.py   
+A class that is initialized with classifiers from ClassifierWrapper.py and vectorizers from Vectorizer.py. Classifiers and vectorizers are passed into the constructor of this class as lists. That means, more than one kind of classifiers/vectorizers can be passed into this class. In such case, the probability outputs of all classifiers are averaged and provided as the final probability prediction. This class also provide a method to do k-fold cross-validation and return a dataframe of relevant scores. The scores are stored to disk if a folder is specified.
 
-Notes:   
-1. Github does not allow files that have size >100MB to be uploaded. Therefor, to repeat the results and run codes/notbooks, you need to uncompress the files stored in these two folders:   
-saved_models/    
-data/     
+evaluate_models.py   
+This file documents the models that we have trained other than CNN.
 
-2. To repeat the results and run code, you also need to download word vectors from this address:   
+evaluate_models_deepnn.py   
+This file documents exclusively training of CNN models.
+
+normailization.py   
+This file documents the steps taken to normailze the news body. This file will normalize the text found in "real_fake_news.csv" that is generated in News_DataPrep_EDA.ipynb.
+
+ModelingResults.ipynb   
+A notebook that shows the comparison of accuracies of all the models that we have trained, as well as a simple case analysis on the texts that get classified incorrectly. Note that because the models are too big to save in github, reviewer of this project will not be able to load the models that we have trained during the project. We suggest to look directly at the results instead of trying to run this notebook.
+
+News_DataPrep_EDA.ipynb   
+A notebook that documents the steps to generate the dataset "real_fake_news.csv" used in normalization.py. It also contains some exploratory data visualization. In order to run this notebook, you will also need to download news dataset from these two sources:   
+https://www.kaggle.com/snapcrack/all-the-news/home   
+https://www.kaggle.com/mrisdal/fake-news   
+And put them into "data" folder.   
+
+3. saved_models/   
+
+This folder save the cross_validation scores for all models.
+
+4. wordvecs/    
+
+This folder stores the pretrained word vectors downloaded from the web and used in this project. We have used the following two pretrained word vectors in our experiments:     
+fastText:   
 https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki-news-300d-1M.vec.zip   
-Also GloVe:    
-kaggle datasets download -d rdizzl3/glove6b50d   
+GloVe:    
+kaggle datasets download -d rdizzl3/glove6b50d
 
-Then uncompress the file and put into the folder of "wordvecs".   
-4. Run text normalization as follows:   
-python3 codes/normalization.py  
-It will normalize the news body and title. But for the proposal, we only use the news body as the input to the classifier.
-3. Run training of deep nets (CNN) as follows:   
-python3 codes/train_deep_nets.py   
-4. To run notebooks/News_DataPrep_EDA.ipynb and generate the dataset "real_fake_news.csv" used in normalization.py, you will also need to download news dataset from these two sources:
-https://www.kaggle.com/snapcrack/all-the-news/home
-https://www.kaggle.com/mrisdal/fake-news
-And put them into "data" folder.
+5. data/   
+
+Data used in this project. Github does not allow files that have size >100MB to be uploaded. Therefor, to repeat the results and run codes/notbooks, you need to uncompress the files stored in this folder.
