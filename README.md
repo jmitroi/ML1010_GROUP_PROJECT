@@ -1,6 +1,7 @@
 # ML1010_GROUP_PROJECT
 Project name: fake news detection   
 Final report is located at write_up/final_report.pdf   
+A Jupyter notebook that summerizes results of this project is located at codes/ModelingResults.ipynb
 
 
 Here are a list of descriptions for each folder in this reposition.   
